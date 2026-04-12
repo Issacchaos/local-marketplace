@@ -5,14 +5,13 @@ description: Emit events to the open-wrapper LLM watcher dashboard via webhook
 
 # Emitting Events to open-wrapper Dashboard
 
-open-wrapper exposes two webhook endpoints that feed into the same event bus:
+Events are sent to the LLM Watcher dashboard via its open-wrapper webhook endpoint:
 
 | Endpoint | Port | Path | Use case |
 |----------|------|------|----------|
-| SSE-only server | 9713 | `/webhook` | Lightweight, preferred for automation |
-| Dashboard server | 7849 | `/api/webhook` | Also works, serves the full UI |
+| LLM Watcher | 3000 | `/api/open-wrapper` | Dashboard event ingestion |
 
-All examples below use the SSE-only endpoint. Substitute `localhost:7849/api/webhook` if needed.
+All examples below use this endpoint.
 
 ## Event Schema
 
@@ -34,7 +33,7 @@ The `id`, `timestamp`, and `source` fields are required in the JSON payload (the
 ## Emitting a Single Event
 
 ```bash
-curl -s -X POST http://localhost:9713/webhook \
+curl -s -X POST http://localhost:3000/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "id": "'$(uuidgen || cat /proc/sys/kernel/random/uuid 2>/dev/null || python3 -c "import uuid; print(uuid.uuid4())")'",
@@ -55,7 +54,7 @@ The server responds with `{"ok": true}` on success.
 Wrap multiple events in a batch payload:
 
 ```bash
-curl -s -X POST http://localhost:9713/webhook \
+curl -s -X POST http://localhost:3000/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "batch": true,
@@ -91,7 +90,7 @@ curl -s -X POST http://localhost:9713/webhook \
 Emit when an LLM request begins.
 
 ```bash
-curl -s -X POST http://localhost:9713/webhook \
+curl -s -X POST http://localhost:3000/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "id": "'$(python3 -c "import uuid; print(uuid.uuid4())")'",
@@ -110,7 +109,7 @@ curl -s -X POST http://localhost:9713/webhook \
 Emit when the LLM response has been fully received.
 
 ```bash
-curl -s -X POST http://localhost:9713/webhook \
+curl -s -X POST http://localhost:3000/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "id": "'$(python3 -c "import uuid; print(uuid.uuid4())")'",
@@ -129,7 +128,7 @@ curl -s -X POST http://localhost:9713/webhook \
 Emit when a request fails.
 
 ```bash
-curl -s -X POST http://localhost:9713/webhook \
+curl -s -X POST http://localhost:3000/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "id": "'$(python3 -c "import uuid; print(uuid.uuid4())")'",
@@ -148,7 +147,7 @@ curl -s -X POST http://localhost:9713/webhook \
 Emit informational or diagnostic messages.
 
 ```bash
-curl -s -X POST http://localhost:9713/webhook \
+curl -s -X POST http://localhost:3000/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "id": "'$(python3 -c "import uuid; print(uuid.uuid4())")'",
@@ -171,15 +170,15 @@ Beyond the four standard patterns above, the schema supports:
 
 ## Verifying Events
 
-Check that events are arriving via the history or stats endpoints:
+Check that events are arriving via the LLM Watcher endpoints:
 
 ```bash
-# Get full event history (up to 500 most recent)
-curl -s http://localhost:7849/api/history | python3 -m json.tool
+# Get full event history
+curl -s http://localhost:3000/api/history | python3 -m json.tool
 
 # Get aggregated stats
-curl -s http://localhost:7849/api/stats | python3 -m json.tool
+curl -s http://localhost:3000/api/stats | python3 -m json.tool
 
 # Stream live events via SSE
-curl -s -N http://localhost:9713/events
+curl -s -N http://localhost:3000/api/events
 ```

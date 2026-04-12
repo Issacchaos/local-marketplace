@@ -32,7 +32,7 @@ MODEL_NAME="<model-or-default>"
 Before running the query, POST a start event to the dashboard webhook (fire-and-forget):
 
 ```bash
-curl -s -X POST http://localhost:9713/webhook \
+curl -s -X POST http://localhost:3000/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{"event_type":"request","command":"ask","status":"start","model":"'"$MODEL_NAME"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'"}}' \
   > /dev/null 2>&1 &
@@ -51,7 +51,7 @@ After the command completes, POST a completion event:
 
 ```bash
 RESP_LEN=${#RESPONSE}
-curl -s -X POST http://localhost:9713/webhook \
+curl -s -X POST http://localhost:3000/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"'}}' \
   > /dev/null 2>&1
