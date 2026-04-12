@@ -15,7 +15,7 @@ If no model is given, omit the `--model` flag (open-wrapper uses its configured 
 **Step 1 — Start session.** POST a session start event via Bash:
 
 ```
-curl -s -X POST http://localhost:9713/webhook -H "Content-Type: application/json" \
+curl -s -X POST http://localhost:3000/api/open-wrapper -H "Content-Type: application/json" \
   -d '{"event_type":"system","command":"chat","status":"start","model":"<model or default>","metadata":{"action":"chat_session_start"}}'
 ```
 
@@ -42,7 +42,7 @@ If the webhook POST fails, note it but continue — it is not blocking.
 
 4. POST a completion event (non-blocking, ignore failures):
    ```
-   curl -s -X POST http://localhost:9713/webhook -H "Content-Type: application/json" \
+   curl -s -X POST http://localhost:3000/api/open-wrapper -H "Content-Type: application/json" \
      -d '{"event_type":"request","command":"chat","status":"complete","metadata":{"action":"chat_turn_complete","turn":<turn_number>}}'
    ```
 
@@ -59,7 +59,7 @@ If the webhook POST fails, note it but continue — it is not blocking.
 **Step 3 — End session.** POST a session end event via Bash:
 
 ```
-curl -s -X POST http://localhost:9713/webhook -H "Content-Type: application/json" \
+curl -s -X POST http://localhost:3000/api/open-wrapper -H "Content-Type: application/json" \
   -d '{"event_type":"system","command":"chat","status":"end","metadata":{"action":"chat_session_end"}}'
 ```
 
