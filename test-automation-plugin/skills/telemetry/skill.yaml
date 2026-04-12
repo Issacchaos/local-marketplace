@@ -1,0 +1,12 @@
+name: telemetry
+version: 1.0.0
+description: Structured event logging for agent team orchestration with non-blocking writes
+
+instructions: SKILL.md
+
+category: infrastructure
+tags:
+  - telemetry
+  - logging
+  - observability
+  - team-orchestration

@@ -1,0 +1,22 @@
+{
+  "name": "open-wrapper",
+  "version": "1.0.0",
+  "description": "Claude Code integration for open-wrapper — query Ollama models, check status, and emit events to the LLM watcher dashboard",
+  "author": {
+    "name": "issac"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ollama",
+    "open-wrapper",
+    "llm",
+    "local-models",
+    "sse",
+    "dashboard"
+  ],
+  "commands": [
+    "./commands/ask-ollama.md",
+    "./commands/ollama-status.md",
+    "./commands/ollama-chat.md"
+  ]
+}

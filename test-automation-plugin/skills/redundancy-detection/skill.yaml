@@ -1,0 +1,12 @@
+name: redundancy-detection
+version: 1.0.0
+description: Detect and prevent redundant test scenario generation by classifying inputs into equivalence classes
+
+instructions: SKILL.md
+
+category: test-generation
+tags:
+  - redundancy
+  - equivalence-class
+  - deduplication
+  - write-agent

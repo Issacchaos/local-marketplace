@@ -1,0 +1,121 @@
+name: llt-run
+version: 1.0.0
+description: Execute LowLevelTests locally or via Gauntlet for console platforms
+
+# Skill metadata
+author: Stephen Ma <stephen.ma@Stephens-MacBook-Pro.local>
+category: testing
+tags:
+  - lowleveltests
+  - catch2
+  - testing
+  - execution
+  - gauntlet
+  - console
+
+instructions: SKILL.md
+
+# Dependencies
+dependencies:
+  - llt-common
+  - catch2_runner
+  - gauntlet_runner
+
+# Supported platforms
+platforms:
+  - Win64
+  - Mac
+  - Linux
+  - PS5
+  - PS4
+  - Xbox
+  - XboxOne
+  - XboxOneGDK
+  - XSX
+  - Switch
+  - Android
+  - iOS
+
+# Usage examples
+examples:
+  - description: Execute local Win64 test
+    command: llt-run --platform Win64 --executable /path/to/FoundationTests.exe
+
+  - description: Execute with tag filtering
+    command: llt-run --platform Win64 --executable /path/to/OnlineTests.exe --tags "[EOS]~[leaderboard]"
+
+  - description: Execute with XML output
+    command: llt-run --platform Win64 --executable /path/to/FoundationTests.exe --output-xml results.xml
+
+  - description: Execute PS5 test via Gauntlet
+    command: llt-run --platform PS5 --target OnlineServicesMcpTests --project FortniteGame.uproject --device-pool PS5Pool
+
+# Related skills
+related:
+  - llt-find
+  - llt-build
+  - llt-parse
+  - llt-workflow
+
+# Requirements
+requirements:
+  python: ">=3.9"
+  external_tools:
+    - name: UnrealBuildTool
+      description: Required for building test executables
+      optional: true
+    - name: RunUAT
+      description: Required for Gauntlet console execution
+      optional: true
+  platform_sdks:
+    - platform: PS5
+      required_for: Console execution
+      check: Environment variable SCE_ORBIS_SDK_DIR
+    - platform: Xbox
+      required_for: Console execution
+      check: Environment variable GameDK or XboxOneXDKLatest
+    - platform: Switch
+      required_for: Console execution
+      check: Environment variable NINTENDO_SDK_ROOT
+
+# Output schema
+output:
+  format: json
+  schema:
+    skill: string
+    version: string
+    status: enum[success, partial_success, error]
+    timestamp: string (ISO 8601)
+    data:
+      execution_config:
+        command: string
+        xml_output: string (optional)
+        timeout: integer
+        platform: string
+      metadata:
+        target: string (optional)
+        platform: string
+        runner_type: enum[catch2, gauntlet]
+        timeout_seconds: integer
+        xml_output: string (optional)
+        requires_device_pool: boolean
+    errors: array[object]
+    warnings: array[object]
+
+# Error codes
+error_codes:
+  - code: VALIDATION_ERROR
+    description: Input validation failed (invalid platform, missing executable, etc.)
+  - code: VALUE_ERROR
+    description: Invalid value provided for argument
+  - code: UNEXPECTED_ERROR
+    description: Unexpected runtime error
+
+# Notes
+notes: |
+  - Local platforms (Win64/Mac/Linux) require --executable path to test binary
+  - Console platforms (PS5/Xbox/Switch) require --target name and Gauntlet device pool
+  - SDK validation is performed automatically for console platforms
+  - Tag filtering follows Catch2 syntax: [tag] to include, ~[tag] to exclude
+  - Timeout defaults: 300s for local, 600s for console
+  - XML output requires Catch2 v3.11.0+ for full compatibility

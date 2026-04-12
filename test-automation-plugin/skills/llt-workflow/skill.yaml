@@ -1,0 +1,225 @@
+name: llt-workflow
+version: 1.0.0
+description: Orchestrate end-to-end LowLevelTest workflows with automated discovery, build, execution, and reporting
+
+author: Stephen Ma
+created: 2026-02-18
+
+category: testing
+tags:
+  - lowleveltests
+  - workflow
+  - orchestration
+  - automation
+  - testing
+  - unreal-engine
+  - catch2
+
+dependencies:
+  skills:
+    - llt-find
+    - llt-build
+    - llt-run
+    - llt-parse
+    - llt-find-for-changes
+  python_modules:
+    - pathlib
+    - json
+    - subprocess
+    - datetime
+    - dataclasses
+
+instructions: SKILL.md
+
+usage: |
+  # Full suite workflow
+  python llt_workflow.py --workflow full-suite --platform Win64 --project-root /path/to/FortniteGame
+
+  # Single target workflow
+  python llt_workflow.py --workflow target --target OnlineServicesMcpTests --platform Win64 --project-root /path/to/FortniteGame
+
+  # Change-based workflow
+  python llt_workflow.py --workflow changes --files Online/LruCache.h --platform Win64 --project-root /path/to/FortniteGame
+
+arguments:
+  required:
+    - name: workflow
+      type: choice
+      choices: [full-suite, target, changes]
+      description: Workflow mode to execute
+    - name: project-root
+      type: path
+      description: Path to UE project root directory
+    - name: platform
+      type: string
+      description: Target platform (Win64, PS5, Mac, Linux, etc.)
+
+  optional:
+    - name: target
+      type: string
+      description: Test target name (required for 'target' workflow)
+    - name: tags
+      type: string
+      description: Catch2 tag filter (e.g., '[Core]', '[!Slow]')
+    - name: timeout
+      type: integer
+      default: 600
+      description: Test execution timeout in seconds
+    - name: files
+      type: list
+      description: Changed source files (required for 'changes' workflow)
+    - name: include-transitive
+      type: boolean
+      default: false
+      description: Include transitive test dependencies in changes workflow
+    - name: test-type
+      type: choice
+      choices: [all, explicit, implicit]
+      default: all
+      description: Type of tests for full-suite workflow
+    - name: report-dir
+      type: path
+      description: Directory for HTML reports (default ./llt-reports)
+    - name: report-name
+      type: string
+      description: Custom report filename
+    - name: report-only
+      type: boolean
+      default: false
+      description: Only generate report from previous results
+    - name: verbose
+      type: boolean
+      default: false
+      description: Enable verbose logging
+
+output:
+  format: json
+  schema:
+    skill: string
+    version: string
+    status: enum [success, partial_success, error]
+    timestamp: string (ISO 8601)
+    data:
+      workflow_type: string
+      status: string
+      total_duration_seconds: float
+      tests_discovered: integer
+      tests_built: integer
+      tests_executed: integer
+      tests_passed: integer
+      tests_failed: integer
+      steps: array
+      report_path: string
+      errors: array
+      warnings: array
+    errors: array
+    warnings: array
+
+workflows:
+  full-suite:
+    description: Discover all tests → build all → run all → parse → report
+    steps:
+      - discover_tests (llt-find)
+      - build_all (llt-build)
+      - run_all (llt-run)
+      - parse_results (llt-parse)
+      - generate_report
+
+  target:
+    description: Validate target → build → run → parse → report
+    steps:
+      - validate_target (llt-find)
+      - build_target (llt-build)
+      - run_tests (llt-run)
+      - parse_results (llt-parse)
+      - generate_report
+
+  changes:
+    description: Find tests for changes → build → run → parse → report
+    steps:
+      - find_tests_for_changes (llt-find-for-changes)
+      - build_affected (llt-build)
+      - run_affected (llt-run)
+      - parse_results (llt-parse)
+      - generate_report
+
+performance:
+  single_target:
+    discovery: < 2s
+    build: 30-90s
+    execution: 10-300s
+    parse: < 1s
+    report: < 1s
+    total: < 5min
+
+  full_suite:
+    discovery: < 2s
+    build: 5-30min
+    execution: 10-60min
+    parse: 2-5s
+    report: 1-3s
+    total: 15-90min
+
+  change_based:
+    discovery: 2-5s
+    build: 1-10min
+    execution: 1-15min
+    parse: < 1s
+    report: < 1s
+    total: 2-30min
+
+examples:
+  - name: Single Target Workflow
+    command: |
+      python llt_workflow.py \
+        --workflow target \
+        --target OnlineServicesMcpTests \
+        --platform Win64 \
+        --project-root /path/to/FortniteGame
+
+  - name: Full Suite Workflow
+    command: |
+      python llt_workflow.py \
+        --workflow full-suite \
+        --platform Win64 \
+        --project-root /path/to/FortniteGame \
+        --test-type all
+
+  - name: Change-Based Workflow
+    command: |
+      python llt_workflow.py \
+        --workflow changes \
+        --files Online/LruCache.h Online/LruCache.cpp \
+        --platform Win64 \
+        --project-root /path/to/FortniteGame \
+        --include-transitive
+
+  - name: With Tag Filters
+    command: |
+      python llt_workflow.py \
+        --workflow target \
+        --target FoundationTests \
+        --tags "[Core][!Slow]" \
+        --platform Win64 \
+        --project-root /path/to/FortniteGame
+
+  - name: Custom Report Location
+    command: |
+      python llt_workflow.py \
+        --workflow target \
+        --target FoundationTests \
+        --platform Win64 \
+        --project-root /path/to/FortniteGame \
+        --report-dir ./custom-reports \
+        --report-name my-test-report.html
+
+integration:
+  ci_cd:
+    - GitHub Actions
+    - Jenkins
+    - TeamCity
+    - BuildGraph
+  tools:
+    - Git pre-commit hooks
+    - Code review automation
+    - Continuous testing

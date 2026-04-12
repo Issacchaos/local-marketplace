@@ -1,0 +1,204 @@
+name: llt-find-sources
+version: 1.0.0
+description: Find source files tested by a test file, or find tests for a source file using evidence-based confidence scoring
+category: LowLevelTests Discovery
+instructions: SKILL.md
+user_invocable: true
+
+arguments:
+  required:
+    - name: project-root
+      type: string
+      description: Root directory of the project (e.g., /path/to/UnrealEngine)
+
+  optional:
+    - name: test-file
+      type: string
+      description: Path to test file for forward lookup (absolute or relative to project-root)
+      mutually_exclusive_with: source-file
+
+    - name: source-file
+      type: string
+      description: Path to source file for reverse lookup (absolute or relative to project-root)
+      mutually_exclusive_with: test-file
+      requires: reverse
+
+    - name: reverse
+      type: boolean
+      default: false
+      description: Enable reverse lookup mode (find tests for source file)
+
+    - name: test-root
+      type: string
+      description: Root directory for test files in reverse lookup (defaults to project-root)
+
+    - name: module-dependencies
+      type: array
+      item_type: string
+      description: Module names the test depends on (for confidence scoring)
+
+    - name: min-confidence
+      type: string
+      choices: [low, medium, high, very high]
+      default: low
+      description: Minimum confidence level to include in results
+
+    - name: output-format
+      type: string
+      choices: [json, table, summary]
+      default: json
+      description: Output format
+
+    - name: debug
+      type: boolean
+      default: false
+      description: Enable debug logging
+
+output:
+  format: json
+  schema:
+    type: object
+    properties:
+      skill:
+        type: string
+        description: Skill name (llt-find-sources)
+      version:
+        type: string
+        description: Skill version
+      status:
+        type: string
+        enum: [success, partial_success, error]
+        description: Response status
+      timestamp:
+        type: string
+        format: date-time
+        description: ISO 8601 timestamp
+      data:
+        type: object
+        properties:
+          mode:
+            type: string
+            enum: [forward, reverse]
+            description: Lookup mode
+          test_file:
+            type: string
+            description: Test file path (forward mode)
+          source_file:
+            type: string
+            description: Source file path (reverse mode)
+          test_root:
+            type: string
+            description: Test root directory (reverse mode)
+          total_count:
+            type: integer
+            description: Total number of mappings found
+          mappings:
+            type: array
+            items:
+              type: object
+              properties:
+                test_file:
+                  type: string
+                  description: Test file path
+                source_file:
+                  type: string
+                  description: Source file path
+                confidence:
+                  type: string
+                  enum: [very high, high, medium, low]
+                  description: Confidence level
+                evidence:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [direct_include, naming_convention, module_dependency]
+                        description: Evidence type
+                      value:
+                        type: string
+                        description: Evidence value
+                      points:
+                        type: integer
+                        description: Score contribution
+          confidence_breakdown:
+            type: object
+            properties:
+              very high:
+                type: integer
+              high:
+                type: integer
+              medium:
+                type: integer
+              low:
+                type: integer
+      errors:
+        type: array
+        items:
+          type: object
+          properties:
+            severity:
+              type: string
+              enum: [critical, error, warning]
+            message:
+              type: string
+            context:
+              type: object
+      warnings:
+        type: array
+        items:
+          type: object
+          properties:
+            severity:
+              type: string
+              enum: [info, warning]
+            message:
+              type: string
+            context:
+              type: object
+
+dependencies:
+  python_version: ">=3.9"
+  modules:
+    - source_mapper
+  documentation:
+    - llt-common/SKILL.md
+
+examples:
+  - name: Forward lookup (test to sources)
+    command: python3 llt_find_sources.py --test-file Core/Tests/LruCacheTest.cpp --project-root /path/to/ue5
+    description: Find source files tested by LruCacheTest.cpp
+
+  - name: Reverse lookup (source to tests)
+    command: python3 llt_find_sources.py --source-file Core/Public/LruCache.h --project-root /path/to/ue5 --reverse
+    description: Find tests that cover LruCache.h
+
+  - name: Filter by confidence
+    command: python3 llt_find_sources.py --test-file Core/Tests/LruCacheTest.cpp --project-root /path/to/ue5 --min-confidence high
+    description: Only show high-confidence mappings
+
+  - name: Table output format
+    command: python3 llt_find_sources.py --test-file Core/Tests/LruCacheTest.cpp --project-root /path/to/ue5 --output-format table
+    description: Display results in human-readable table
+
+requirements_implemented:
+  - REQ-F-36: Parse #include directives from test files
+  - REQ-F-37: Analyze module dependencies from .Build.cs files
+  - REQ-F-38: Apply naming convention matching
+  - REQ-F-39: Calculate confidence scores
+  - REQ-F-40: Support reverse lookup
+  - REQ-F-41: Filter test framework includes
+  - REQ-F-42: Return structured JSON output
+
+related_skills:
+  - llt-find: Discover all LLT targets
+  - llt-find-for-changes: Find tests for modified source files
+  - llt-coverage: Calculate module-level test coverage
+
+tags:
+  - lowleveltests
+  - discovery
+  - source-mapping
+  - testing
+  - unreal-engine

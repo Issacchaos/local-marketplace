@@ -1,0 +1,12 @@
+name: llt-web-tests
+version: 1.0.0
+description: Specialized guidance for working with WebTests (LLTs for web runtime environments)
+
+instructions: SKILL.md
+
+category: testing
+tags:
+  - lowleveltests
+  - web-tests
+  - webrunner
+  - webassembly

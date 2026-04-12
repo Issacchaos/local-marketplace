@@ -1,0 +1,20 @@
+{
+  "feedback_data": {
+    "type": "Bug Report",
+    "title": "Test timeout issue on Windows",
+    "description": "Tests timeout after 5 minutes on Windows platform",
+    "diagnostics": {
+      "command_history": [],
+      "environment": {"plugin_version": "0.1.0", "os": "Windows"},
+      "errors": [],
+      "project_context": {}
+    }
+  },
+  "submission_metadata": {
+    "attempt_count": 2,
+    "max_retries": 5,
+    "last_attempted": "2026-01-21T09:00:00Z",
+    "abandoned": false,
+    "queued_at": "2026-01-21T08:00:00Z"
+  }
+}

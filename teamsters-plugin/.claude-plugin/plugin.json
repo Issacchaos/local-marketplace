@@ -1,0 +1,20 @@
+{
+  "name": "teamsters",
+  "version": "1.0.0",
+  "description": "Agent team orchestration for Claude Code - define, execute, and manage parallel agent teams",
+  "author": {
+    "name": "Teamsters"
+  },
+  "license": "MIT",
+  "keywords": [
+    "orchestration",
+    "agent-teams",
+    "parallel-agents",
+    "team-coordination",
+    "approval-gates",
+    "telemetry"
+  ],
+  "commands": [
+    "./commands/team-run.md"
+  ]
+}

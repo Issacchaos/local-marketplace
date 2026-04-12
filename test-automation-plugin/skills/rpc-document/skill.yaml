@@ -1,0 +1,12 @@
+name: rpc-document
+version: 1.0.0
+description: Generate JSON documentation for a single C++ RPC hook from its registration and handler implementation
+
+instructions: SKILL.md
+
+category: rpc
+tags:
+  - rpc
+  - documentation
+  - c++
+  - unreal-engine

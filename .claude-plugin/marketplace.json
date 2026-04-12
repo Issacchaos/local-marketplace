@@ -1,0 +1,32 @@
+{
+  "name": "local-plugins",
+  "owner": {
+    "name": "issac"
+  },
+  "plugins": [
+    {
+      "name": "dream-mentor",
+      "description": "Load repos as dream states to guide development with Claude Code",
+      "category": "development",
+      "source": "./dream-mentor-plugin"
+    },
+    {
+      "name": "teamsters",
+      "description": "Agent team orchestration for Claude Code - define, execute, and manage parallel agent teams",
+      "category": "development",
+      "source": "./teamsters-plugin"
+    },
+    {
+      "name": "test-engineering",
+      "description": "Dante: Intelligent AI-powered test generation with human-in-the-loop controls",
+      "category": "testing",
+      "source": "./test-automation-plugin"
+    },
+    {
+      "name": "open-wrapper",
+      "description": "Claude Code integration for open-wrapper — query Ollama models, check status, and emit events to the LLM watcher dashboard",
+      "category": "development",
+      "source": "D:\\dev\\open-wrapper\\plugin"
+    }
+  ]
+}

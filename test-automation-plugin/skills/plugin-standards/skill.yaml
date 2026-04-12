@@ -1,0 +1,12 @@
+name: plugin-standards
+version: 1.0.0
+description: Dante plugin-specific development standards and architecture patterns for contributors
+
+instructions: SKILL.md
+
+category: internal
+tags:
+  - standards
+  - conventions
+  - architecture
+  - internal

@@ -1,0 +1,13 @@
+name: llt-online-tests
+version: 1.0.0
+description: Specialized guidance for working with Epic's Online Tests framework (OSSv2 testing with Catch2 builder pattern)
+
+instructions: SKILL.md
+
+category: testing
+tags:
+  - lowleveltests
+  - online-tests
+  - ossv2
+  - catch2
+  - async

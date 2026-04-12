@@ -1,0 +1,131 @@
+name: llt-parse
+version: 1.0.0
+description: Parse Catch2 test results from XML reports and console logs
+
+# Skill metadata
+metadata:
+  category: testing
+  tags:
+    - lowleveltests
+    - catch2
+    - parsing
+    - test-results
+  author: Stephen Ma
+  created: 2026-02-18
+
+instructions: SKILL.md
+
+# Dependencies (all local to dante_plugin)
+dependencies:
+  - llt-common/SKILL.md
+  - llt-parse/scripts/catch2_xml_parser.py
+  - llt-parse/scripts/console_log_parser.py
+
+# Command-line interface
+arguments:
+  - name: xml
+    type: string
+    required: false
+    description: Path to Catch2 XML report file
+
+  - name: console
+    type: string
+    required: false
+    description: Path to Catch2 console log file
+
+  - name: output-format
+    type: enum
+    choices: [json, pretty]
+    default: json
+    description: Output format
+
+  - name: verbose
+    type: flag
+    short: v
+    description: Enable verbose logging
+
+# At least one input source required
+validation:
+  - rule: at_least_one
+    fields: [xml, console]
+    message: "At least one input source required (--xml or --console)"
+
+# Output schema
+output:
+  format: json
+  schema:
+    type: object
+    required: [skill, version, status, data]
+    properties:
+      skill:
+        type: string
+        const: llt-parse
+      version:
+        type: string
+      status:
+        type: string
+        enum: [success, error]
+      data:
+        type: object
+        properties:
+          statistics:
+            type: object
+            properties:
+              total_tests: {type: integer}
+              passed: {type: integer}
+              failed: {type: integer}
+              skipped: {type: integer}
+              pass_rate: {type: number}
+              total_duration: {type: number}
+          test_results:
+            type: array
+            items:
+              type: object
+              properties:
+                test_name: {type: string}
+                status: {type: string, enum: [passed, failed, skipped]}
+                duration: {type: number}
+                failure_details:
+                  type: object
+                  properties:
+                    assertion_type: {type: string}
+                    expression: {type: string}
+                    message: {type: string}
+                    file: {type: string}
+                    line: {type: integer}
+
+# Error codes
+error_codes:
+  MISSING_INPUT: "At least one input source required"
+  FILE_NOT_FOUND: "Input file does not exist"
+  XML_PARSE_ERROR: "XML file is malformed or unsupported format"
+  CONSOLE_PARSE_ERROR: "Console log parsing failed"
+
+# Performance characteristics
+performance:
+  xml_parsing: "~1-2ms per test case"
+  console_parsing: "~2-3ms per test case"
+  typical_runtime: "<100ms for 42 tests"
+
+# Examples
+examples:
+  - description: Parse XML report only
+    command: python3 llt_parse.py --xml test_results.xml
+
+  - description: Parse console log only
+    command: python3 llt_parse.py --console test_output.log
+
+  - description: Parse both (XML prioritized)
+    command: python3 llt_parse.py --xml test_results.xml --console test_output.log
+
+  - description: Pretty-print output
+    command: python3 llt_parse.py --xml test_results.xml --output-format pretty
+
+  - description: Verbose mode with summary
+    command: python3 llt_parse.py --xml test_results.xml --verbose
+
+# Related skills
+related_skills:
+  - llt-run
+  - llt-workflow
+  - llt-find

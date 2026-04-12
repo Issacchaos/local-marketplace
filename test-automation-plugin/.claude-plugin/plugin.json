@@ -1,0 +1,42 @@
+{
+  "name": "test-engineering",
+  "version": "2.14.2",
+  "description": "Dante: Intelligent AI-powered test generation with human-in-the-loop controls",
+  "author": {
+    "name": "Test Automation"
+  },
+  "license": "MIT",
+  "keywords": [
+    "testing",
+    "test-generation",
+    "pytest",
+    "jest",
+    "junit",
+    "automation",
+    "ai-testing",
+    "human-in-the-loop",
+    "python",
+    "javascript",
+    "typescript",
+    "java",
+    "csharp",
+    "go",
+    "cpp",
+    "dante"
+  ],
+  "commands": [
+    "./commands/test-analyze.md",
+    "./commands/test-generate.md",
+    "./commands/test-loop.md",
+    "./commands/test-resume.md",
+    "./commands/feedback.md",
+    "./commands/team-run.md",
+    "./commands/test-planner.md",
+    "./commands/tdd.md",
+    "./commands/tdd-resume.md",
+    "./commands/test-execute.md",
+    "./rpc-scaffold/commands/rpc-discover.md"
+  ],
+  "repository": "https://github.example.com/my-org/my-plugin.git",
+  "homepage": "https://github.example.com/my-org/my-plugin#readme"
+}

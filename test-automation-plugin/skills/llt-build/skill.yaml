@@ -1,0 +1,39 @@
+name: llt-build
+version: 1.0.0
+description: Build LowLevelTest executables using UnrealBuildTool or BuildGraph
+category: testing
+
+dependencies:
+  - llt-common
+
+tags:
+  - unreal-engine
+  - testing
+  - lowleveltests
+  - build
+  - compilation
+  - ubt
+
+author: Stephen Ma
+created: 2026-02-18
+last_updated: 2026-02-18
+
+capabilities:
+  - generate_build_commands
+  - validate_sdk_installation
+  - parse_build_logs
+  - extract_executable_paths
+  - detect_build_failures
+
+platforms:
+  - Win64
+  - Mac
+  - Linux
+  - PS5
+  - PS4
+  - Xbox
+  - Switch
+  - Android
+  - iOS
+
+instructions: SKILL.md

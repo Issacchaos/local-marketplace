@@ -1,0 +1,19 @@
+{
+  "name": "dream-mentor",
+  "version": "2.0.0",
+  "description": "Load repos as dream states to guide development with Claude Code",
+  "author": {
+    "name": "Dream Mentor"
+  },
+  "license": "MIT",
+  "keywords": [
+    "dream-state",
+    "memory-management",
+    "repo-analysis",
+    "code-patterns",
+    "layered-guidance"
+  ],
+  "commands": [
+    "./commands/mentor.md"
+  ]
+}

@@ -1,0 +1,480 @@
+digraph dante_plugin_traversal {
+  // ===== GRAPH SETTINGS =====
+  rankdir=TB;
+  compound=true;
+  splines=true;
+  nodesep=0.5;
+  ranksep=0.7;
+  node [fontname="Helvetica", fontsize=10];
+  edge [fontname="Helvetica", fontsize=8, color="#555555"];
+
+  // ===== LEGEND =====
+  subgraph cluster_legend {
+    label="Legend";
+    labeljust="l";
+    style=filled;
+    color="#EEEEEE";
+    fillcolor="#EEEEEE";
+    fontsize=12;
+    fontname="Helvetica-Bold";
+
+    l_cmd  [label="Command\n(entry point)", shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    l_sub  [label="Subagent\n(orchestrator)", shape=hexagon, style=filled, fillcolor="#F39C12", fontcolor=white];
+    l_agt  [label="Agent", shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+    l_skl  [label="Skill", shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    l_team [label="Team", shape=diamond, style=filled, fillcolor="#9B59B6", fontcolor=white];
+    l_ext  [label="External", shape=octagon, style=filled, fillcolor="#F1C40F"];
+
+    l_cmd  -> l_sub  [style=invis];
+    l_sub  -> l_agt  [style=invis];
+    l_agt  -> l_skl  [style=invis];
+    l_skl  -> l_team [style=invis];
+    l_team -> l_ext  [style=invis];
+  }
+
+  // =============================================================
+  // COMMANDS (11)
+  // =============================================================
+  subgraph cluster_commands {
+    label="Commands (11 User Entry Points)";
+    labeljust="l";
+    style=filled;
+    color="#FADBD8";
+    fillcolor="#FADBD8";
+    fontsize=12;
+    fontname="Helvetica-Bold";
+
+    cmd_analyze    [label="/test-analyze",   shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    cmd_loop       [label="/test-loop",      shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    cmd_generate   [label="/test-generate",  shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    cmd_resume     [label="/test-resume",    shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    cmd_teamrun    [label="/team-run",       shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    cmd_feedback   [label="/feedback",       shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    cmd_planner    [label="/test-planner",   shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    cmd_tdd        [label="/tdd",            shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    cmd_tdd_resume [label="/tdd-resume",     shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    cmd_execute    [label="/test-execute",   shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+    cmd_rpc        [label="/rpc-discover",   shape=box, style="filled,bold", fillcolor="#E74C3C", fontcolor=white];
+  }
+
+  // =============================================================
+  // SUBAGENTS (2)
+  // =============================================================
+  subgraph cluster_subagents {
+    label="Subagents (Orchestrators)";
+    labeljust="l";
+    style=filled;
+    color="#FDEBD0";
+    fillcolor="#FDEBD0";
+    fontsize=12;
+    fontname="Helvetica-Bold";
+
+    sub_testloop [label="test-loop-\norchestrator\n(7 phases)", shape=hexagon, style=filled, fillcolor="#F39C12", fontcolor=white, penwidth=2];
+    sub_tdd      [label="tdd-\norchestrator\n(8 phases)", shape=hexagon, style=filled, fillcolor="#F39C12", fontcolor=white, penwidth=2];
+  }
+
+  // =============================================================
+  // AGENTS (11)
+  // =============================================================
+  subgraph cluster_agents {
+    label="Agents (11)";
+    labeljust="l";
+    style=filled;
+    color="#D6EAF8";
+    fillcolor="#D6EAF8";
+    fontsize=12;
+    fontname="Helvetica-Bold";
+
+    // Core test-loop agents
+    agent_analyze  [label="analyze-agent",   shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+    agent_write    [label="write-agent",     shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white, penwidth=2];
+    agent_execute  [label="execute-agent",   shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+    agent_validate [label="validate-agent",  shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+    agent_fix      [label="fix-agent",       shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+
+    // TDD agents
+    agent_tdd_spec      [label="tdd-spec-\nagent",      shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+    agent_tdd_implement [label="tdd-implement-\nagent",  shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+    agent_tdd_refactor  [label="tdd-refactor-\nagent",   shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+
+    // Specialized agents
+    agent_simplifier    [label="script-simplifier-\nagent", shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+    agent_sdd_impl      [label="sdd-implementation-\nagent", shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+    agent_rpc_analyzer  [label="code-analyzer\n(rpc)", shape=ellipse, style=filled, fillcolor="#3498DB", fontcolor=white];
+  }
+
+  // =============================================================
+  // LLT SKILLS (12)
+  // =============================================================
+  subgraph cluster_llt_skills {
+    label="LLT Skills (12)";
+    labeljust="l";
+    style=filled;
+    color="#D5F5E3";
+    fillcolor="#D5F5E3";
+    fontsize=12;
+    fontname="Helvetica-Bold";
+
+    skill_llt_workflow    [label="llt-workflow\n(orchestrator)", shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white, penwidth=2];
+    skill_llt_find        [label="llt-find",             shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_llt_build       [label="llt-build",            shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_llt_run         [label="llt-run",              shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_llt_parse       [label="llt-parse",            shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_llt_generate    [label="llt-generate",         shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_llt_online      [label="llt-online-tests",     shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_llt_web         [label="llt-web-tests",        shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_llt_coverage    [label="llt-coverage",         shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_llt_find_src    [label="llt-find-sources",     shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_llt_find_chg    [label="llt-find-for-\nchanges", shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_llt_common      [label="llt-common\n(shared lib)", shape=box, style="rounded,filled", fillcolor="#ABEBC6"];
+  }
+
+  // =============================================================
+  // RPC SKILLS (5)
+  // =============================================================
+  subgraph cluster_rpc_skills {
+    label="RPC Skills (5)";
+    labeljust="l";
+    style=filled;
+    color="#D5F5E3";
+    fillcolor="#D5F5E3";
+    fontsize=12;
+    fontname="Helvetica-Bold";
+
+    skill_rpc_scanner   [label="rpc-discovery-\nscanner",   shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_rpc_cache     [label="rpc-discovery-\ncache",     shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_rpc_cpp       [label="rpc-cpp-\ndiscovery",       shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_rpc_csharp    [label="rpc-csharp-\ndiscovery",    shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_rpc_document  [label="rpc-document",              shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+  }
+
+  // =============================================================
+  // CORE SKILLS (10)
+  // =============================================================
+  subgraph cluster_core_skills {
+    label="Core Skills (10)";
+    labeljust="l";
+    style=filled;
+    color="#D5F5E3";
+    fillcolor="#D5F5E3";
+    fontsize=12;
+    fontname="Helvetica-Bold";
+
+    skill_framework [label="framework-\ndetection",        shape=box, style="rounded,filled", fillcolor="#2ECC71", fontcolor=white];
+    skill_project   [label="project-\ndetection",          shape=box, style="rounded,filled", fillcolor="#2ECC71", fontcolor=white];
+    skill_testloc   [label="test-location-\ndetection",    shape=box, style="rounded,filled", fillcolor="#2ECC71", fontcolor=white];
+    skill_testgen   [label="test-generation",              shape=box, style="rounded,filled", fillcolor="#2ECC71", fontcolor=white];
+    skill_templates [label="templates",                    shape=box, style="rounded,filled", fillcolor="#2ECC71", fontcolor=white];
+    skill_parsing   [label="result-parsing",               shape=box, style="rounded,filled", fillcolor="#2ECC71", fontcolor=white];
+    skill_state     [label="state-management",             shape=box, style="rounded,filled", fillcolor="#2ECC71", fontcolor=white];
+    skill_model     [label="model-selection",              shape=box, style="rounded,filled", fillcolor="#2ECC71", fontcolor=white];
+    skill_e2e       [label="e2e",                          shape=box, style="rounded,filled", fillcolor="#2ECC71", fontcolor=white];
+    skill_planner   [label="test-planner",                 shape=box, style="rounded,filled", fillcolor="#2ECC71", fontcolor=white];
+  }
+
+  // =============================================================
+  // ORCHESTRATION SKILLS (team-orchestration subsystem)
+  // =============================================================
+  subgraph cluster_orch_skills {
+    label="Orchestration Skills (team-orchestration subsystem)";
+    labeljust="l";
+    style=filled;
+    color="#D5F5E3";
+    fillcolor="#D5F5E3";
+    fontsize=12;
+    fontname="Helvetica-Bold";
+
+    skill_team_orch  [label="team-orchestration\n(coordinator)", shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white, penwidth=2];
+    skill_team_load  [label="team-loader",              shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_lifecycle  [label="agent-lifecycle-\nmanager", shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_resource   [label="resource-manager",         shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_approval   [label="approval-gate-\nhandler",  shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+    skill_aggregator [label="result-aggregator",        shape=box, style="rounded,filled", fillcolor="#27AE60", fontcolor=white];
+  }
+
+  // =============================================================
+  // SUPPORT SKILLS (7)
+  // =============================================================
+  subgraph cluster_support_skills {
+    label="Support Skills (7)";
+    labeljust="l";
+    style=filled;
+    color="#D5F5E3";
+    fillcolor="#D5F5E3";
+    fontsize=12;
+    fontname="Helvetica-Bold";
+
+    skill_build      [label="build-integration",     shape=box, style="rounded,filled", fillcolor="#58D68D"];
+    skill_linting    [label="linting",               shape=box, style="rounded,filled", fillcolor="#58D68D"];
+    skill_helper     [label="helper-extraction",     shape=box, style="rounded,filled", fillcolor="#58D68D"];
+    skill_redundancy [label="redundancy-detection",  shape=box, style="rounded,filled", fillcolor="#58D68D"];
+    skill_ghpr       [label="gh-pr-manage",          shape=box, style="rounded,filled", fillcolor="#58D68D"];
+    skill_telemetry  [label="telemetry",             shape=box, style="rounded,filled", fillcolor="#58D68D"];
+    skill_standards  [label="plugin-standards",      shape=box, style="rounded,filled", fillcolor="#ABEBC6"];
+  }
+
+  // =============================================================
+  // TEAMS (6)
+  // =============================================================
+  subgraph cluster_teams {
+    label="Teams (6)";
+    labeljust="l";
+    style=filled;
+    color="#E8DAEF";
+    fillcolor="#E8DAEF";
+    fontsize=12;
+    fontname="Helvetica-Bold";
+
+    team_audit       [label="full-audit",                    shape=diamond, style=filled, fillcolor="#9B59B6", fontcolor=white];
+    team_tdd         [label="tdd-workflow",                  shape=diamond, style=filled, fillcolor="#9B59B6", fontcolor=white];
+    team_llt         [label="llt-test-\ngeneration",         shape=diamond, style=filled, fillcolor="#9B59B6", fontcolor=white];
+    team_simplify    [label="skill-\nsimplification",        shape=diamond, style=filled, fillcolor="#9B59B6", fontcolor=white];
+    team_arch        [label="plugin-architecture-\nanalysis", shape=diamond, style=filled, fillcolor="#9B59B6", fontcolor=white];
+    team_llt_fix     [label="ue-llt-\nfix-tests",           shape=diamond, style=filled, fillcolor="#9B59B6", fontcolor=white];
+  }
+
+  // =============================================================
+  // EXTERNAL
+  // =============================================================
+  ext_github [label="GitHub CLI\n(external)", shape=octagon, style=filled, fillcolor="#F1C40F"];
+
+  // =============================================================
+  // EDGES: COMMANDS -> SUBAGENTS / AGENTS / SKILLS
+  // =============================================================
+
+  // /test-analyze
+  cmd_analyze -> agent_analyze    [label="launch"];
+  cmd_analyze -> skill_framework  [label="direct"];
+  cmd_analyze -> skill_project    [label="direct"];
+  cmd_analyze -> skill_model      [label="resolve model"];
+
+  // /test-loop
+  cmd_loop -> sub_testloop     [label="sequential\n(default)", penwidth=2];
+  cmd_loop -> skill_team_orch  [label="--use-teams", style=dashed, color="#8E44AD"];
+
+  // /test-generate
+  cmd_generate -> agent_analyze    [label="Step 1"];
+  cmd_generate -> agent_write      [label="Step 2"];
+  cmd_generate -> agent_execute    [label="Step 3"];
+  cmd_generate -> agent_validate   [label="Step 4"];
+  cmd_generate -> agent_fix        [label="Step 4b\n(on failure)"];
+  cmd_generate -> skill_model      [label="resolve model"];
+  cmd_generate -> skill_project    [label="direct"];
+  cmd_generate -> skill_framework  [label="direct"];
+  cmd_generate -> skill_team_orch  [label="--use-teams", style=dashed, color="#8E44AD"];
+
+  // /test-resume
+  cmd_resume -> sub_testloop   [label="resume"];
+  cmd_resume -> skill_state    [label="load state"];
+  cmd_resume -> skill_project  [label="find root"];
+
+  // /team-run
+  cmd_teamrun -> skill_team_orch [label="execute team", penwidth=2];
+
+  // /feedback
+  cmd_feedback -> ext_github   [label="gh issue create"];
+
+  // /test-planner (inline command)
+  cmd_planner -> skill_project [label="find root"];
+  cmd_planner -> skill_planner [label="generate plan"];
+
+  // /tdd
+  cmd_tdd -> sub_tdd          [label="sequential\n(default)", penwidth=2];
+  cmd_tdd -> skill_team_orch  [label="--use-teams", style=dashed, color="#8E44AD"];
+  cmd_tdd -> skill_model      [label="resolve model"];
+
+  // /tdd-resume
+  cmd_tdd_resume -> sub_tdd       [label="resume at\nsaved phase"];
+  cmd_tdd_resume -> skill_state   [label="load state"];
+  cmd_tdd_resume -> skill_project [label="find root"];
+
+  // /test-execute (inline command)
+  cmd_execute -> skill_framework  [label="detect"];
+  cmd_execute -> skill_parsing    [label="parse"];
+  cmd_execute -> skill_project    [label="find root"];
+  cmd_execute -> skill_e2e        [label="if e2e"];
+  cmd_execute -> skill_build      [label="build"];
+  cmd_execute -> skill_model      [label="resolve model"];
+  cmd_execute -> skill_llt_run    [label="if LLT"];
+  cmd_execute -> skill_llt_build  [label="if LLT"];
+  cmd_execute -> skill_llt_parse  [label="if LLT"];
+  cmd_execute -> agent_validate   [label="--validate", style=dashed];
+
+  // /rpc-discover
+  cmd_rpc -> skill_rpc_scanner  [label="Pass 1\nscan"];
+  cmd_rpc -> skill_rpc_cache    [label="cache"];
+  cmd_rpc -> skill_rpc_cpp      [label="C++ hooks"];
+  cmd_rpc -> skill_rpc_csharp   [label="C# hooks"];
+  cmd_rpc -> skill_rpc_document [label="document"];
+  cmd_rpc -> agent_rpc_analyzer [label="Pass 2\nper-handler"];
+
+  // =============================================================
+  // EDGES: TEST-LOOP ORCHESTRATOR -> TARGETS
+  // =============================================================
+  sub_testloop -> skill_model     [label="Phase 0"];
+  sub_testloop -> skill_project   [label="Phase 0"];
+  sub_testloop -> skill_testloc   [label="Phase 0"];
+  sub_testloop -> skill_framework [label="Phase 0"];
+  sub_testloop -> skill_e2e       [label="if e2e"];
+  sub_testloop -> skill_state     [label="checkpoint"];
+  sub_testloop -> skill_linting   [label="Phase 4"];
+  sub_testloop -> skill_build     [label="Phase 4"];
+  sub_testloop -> agent_analyze   [label="Phase 1", color="#3498DB"];
+  sub_testloop -> agent_write     [label="Phase 3", color="#3498DB"];
+  sub_testloop -> agent_execute   [label="Phase 5", color="#3498DB"];
+  sub_testloop -> agent_validate  [label="Phase 6", color="#3498DB"];
+  sub_testloop -> agent_fix       [label="Phase 7", color="#3498DB"];
+
+  // =============================================================
+  // EDGES: TDD ORCHESTRATOR -> TARGETS
+  // =============================================================
+  sub_tdd -> skill_model      [label="Phase 0"];
+  sub_tdd -> skill_project    [label="Phase 0"];
+  sub_tdd -> skill_framework  [label="Phase 0"];
+  sub_tdd -> skill_testloc    [label="Phase 0"];
+  sub_tdd -> skill_state      [label="checkpoint"];
+  sub_tdd -> agent_tdd_spec      [label="Phase 1\nRED", color="#E74C3C"];
+  sub_tdd -> agent_execute       [label="Phase 3\nVERIFY RED", color="#E74C3C"];
+  sub_tdd -> agent_tdd_implement [label="Phase 4\nGREEN", color="#27AE60"];
+  sub_tdd -> agent_execute       [label="Phase 5\nVERIFY GREEN", color="#27AE60"];
+  sub_tdd -> agent_tdd_refactor  [label="Phase 7\nREFACTOR", color="#3498DB"];
+  sub_tdd -> agent_execute       [label="Phase 8\nVERIFY REFACTOR", color="#3498DB"];
+
+  // =============================================================
+  // EDGES: TEAM-ORCHESTRATION -> SUB-SKILLS
+  // =============================================================
+  skill_team_orch -> skill_team_load  [label="Phase 1"];
+  skill_team_orch -> skill_resource   [label="Phase 2"];
+  skill_team_orch -> skill_approval   [label="Phase 3,6"];
+  skill_team_orch -> skill_lifecycle  [label="Phase 4"];
+  skill_team_orch -> skill_aggregator [label="Phase 5"];
+  skill_team_orch -> skill_telemetry  [label="all phases"];
+
+  // Team-orchestration dynamic agent dispatch
+  skill_team_orch -> agent_analyze    [style=dashed, color="#8E44AD", label="Task"];
+  skill_team_orch -> agent_write      [style=dashed, color="#8E44AD", label="Task"];
+  skill_team_orch -> agent_execute    [style=dashed, color="#8E44AD", label="Task"];
+  skill_team_orch -> agent_validate   [style=dashed, color="#8E44AD", label="Task"];
+  skill_team_orch -> agent_fix        [style=dashed, color="#8E44AD", label="Task"];
+
+  // Orchestration sub-skill edges
+  skill_resource  -> skill_lifecycle  [label="track"];
+  skill_resource  -> skill_telemetry  [label="log"];
+  skill_approval  -> skill_telemetry  [label="log"];
+  skill_lifecycle -> skill_telemetry  [label="log"];
+
+  // =============================================================
+  // EDGES: TEAMS -> AGENTS (via coordinators)
+  // =============================================================
+
+  // tdd-workflow team
+  team_tdd -> agent_tdd_spec      [label="RED", color="#9B59B6"];
+  team_tdd -> agent_execute       [label="VERIFY\n(x3)", color="#9B59B6"];
+  team_tdd -> agent_tdd_implement [label="GREEN", color="#9B59B6"];
+  team_tdd -> agent_tdd_refactor  [label="REFACTOR", color="#9B59B6"];
+
+  // llt-test-generation team
+  team_llt -> agent_sdd_impl [label="15 tasks", color="#9B59B6"];
+
+  // skill-simplification team
+  team_simplify -> agent_simplifier [label="per script", color="#9B59B6"];
+
+  // ue-llt-fix-tests team
+  team_llt_fix -> skill_build [label="UE build\nsystem", color="#9B59B6"];
+
+  // =============================================================
+  // EDGES: AGENTS -> SKILLS
+  // =============================================================
+
+  // analyze-agent
+  agent_analyze -> skill_framework [label="detect"];
+
+  // write-agent (highest fan-out)
+  agent_write -> skill_testloc    [label="locate"];
+  agent_write -> skill_testgen    [label="patterns"];
+  agent_write -> skill_templates  [label="templates"];
+  agent_write -> skill_redundancy [label="dedup"];
+  agent_write -> skill_helper     [label="helpers"];
+  agent_write -> skill_build      [label="build"];
+  agent_write -> skill_linting    [label="lint"];
+  agent_write -> skill_framework  [label="detect"];
+
+  // execute-agent
+  agent_execute -> skill_parsing   [label="parse"];
+  agent_execute -> skill_framework [label="detect"];
+
+  // validate-agent
+  agent_validate -> skill_parsing  [label="parse"];
+  agent_validate -> skill_state    [label="persist"];
+
+  // fix-agent
+  agent_fix -> agent_execute [label="re-run", style=dotted, color="#E67E22"];
+
+  // tdd-spec-agent
+  agent_tdd_spec -> skill_framework [label="detect"];
+  agent_tdd_spec -> skill_testloc   [label="locate"];
+  agent_tdd_spec -> skill_testgen   [label="patterns"];
+  agent_tdd_spec -> skill_templates [label="templates"];
+
+  // tdd-implement-agent
+  agent_tdd_implement -> skill_framework [label="detect"];
+  agent_tdd_implement -> skill_project   [label="root"];
+  agent_tdd_implement -> skill_build     [label="build"];
+
+  // tdd-refactor-agent
+  agent_tdd_refactor -> skill_linting [label="lint"];
+
+  // code-analyzer (rpc) — self-contained, no skill deps
+  // agent_rpc_analyzer uses Read + Grep only
+
+  // =============================================================
+  // EDGES: LLT SKILL CHAIN
+  // =============================================================
+  skill_llt_workflow -> skill_llt_find   [label="discover"];
+  skill_llt_workflow -> skill_llt_build  [label="build"];
+  skill_llt_workflow -> skill_llt_run    [label="execute"];
+  skill_llt_workflow -> skill_llt_parse  [label="report"];
+
+  skill_llt_find     -> skill_llt_common [label="shared lib"];
+  skill_llt_build    -> skill_llt_common [label="shared lib"];
+  skill_llt_run      -> skill_llt_common [label="shared lib"];
+  skill_llt_parse    -> skill_llt_common [label="shared lib"];
+  skill_llt_generate -> skill_llt_find   [label="targets"];
+  skill_llt_generate -> skill_llt_build  [label="build"];
+  skill_llt_generate -> skill_llt_run    [label="run"];
+  skill_llt_coverage -> skill_llt_find_src [label="source map"];
+  skill_llt_find_chg -> skill_llt_find   [label="targets"];
+
+  // =============================================================
+  // EDGES: RPC SKILL CHAIN
+  // =============================================================
+  skill_rpc_scanner -> skill_rpc_cpp    [label="C++ pass"];
+  skill_rpc_scanner -> skill_rpc_csharp [label="C# pass"];
+  skill_rpc_scanner -> skill_rpc_cache  [label="persist"];
+
+  // =============================================================
+  // EDGES: SKILL -> SKILL DEPENDENCIES
+  // =============================================================
+  skill_testloc -> skill_project   [label="root"];
+  skill_testgen -> skill_framework [label="detect"];
+  skill_testgen -> skill_templates [label="use"];
+  skill_testgen -> skill_parsing   [label="reference"];
+  skill_state   -> skill_project   [label="root"];
+
+  // =============================================================
+  // EDGES: TEAMS -> TEAM-ORCHESTRATION (loaded via /team-run)
+  // =============================================================
+  team_audit    -> skill_team_orch [label="load def", style=dashed, color="#9B59B6"];
+  team_tdd      -> skill_team_orch [label="load def", style=dashed, color="#9B59B6"];
+  team_llt      -> skill_team_orch [label="load def", style=dashed, color="#9B59B6"];
+  team_simplify -> skill_team_orch [label="load def", style=dashed, color="#9B59B6"];
+  team_arch     -> skill_team_orch [label="load def", style=dashed, color="#9B59B6"];
+  team_llt_fix  -> skill_team_orch [label="load def", style=dashed, color="#9B59B6"];
+
+  // =============================================================
+  // RANK HINTS
+  // =============================================================
+  {rank=min; cmd_analyze; cmd_loop; cmd_generate; cmd_resume; cmd_teamrun; cmd_feedback; cmd_planner; cmd_tdd; cmd_tdd_resume; cmd_execute; cmd_rpc;}
+  {rank=same; sub_testloop; sub_tdd;}
+  {rank=same; agent_analyze; agent_write; agent_execute; agent_validate; agent_fix; agent_tdd_spec; agent_tdd_implement; agent_tdd_refactor; agent_simplifier; agent_sdd_impl; agent_rpc_analyzer;}
+}

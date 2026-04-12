@@ -1,0 +1,201 @@
+name: llt-find-for-changes
+version: 1.0.0
+description: Identify relevant tests for modified source files in Unreal Engine LowLevelTests
+
+# Skill metadata
+metadata:
+  category: testing
+  tags:
+    - lowleveltests
+    - testing
+    - unreal-engine
+    - code-changes
+    - ci-cd
+    - test-selection
+  author: LLT Skills Suite
+  created: 2026-02-18
+
+# Skill capabilities
+capabilities:
+  - name: module_discovery
+    description: Walk directory tree to find parent module for modified files
+  - name: direct_test_discovery
+    description: Find test files in same module's Tests/ subdirectory
+  - name: dependency_analysis
+    description: Use dependency graph to find test modules depending on modified modules
+  - name: transitive_test_inclusion
+    description: Optionally include tests that transitively depend on modified modules
+  - name: change_impact_analysis
+    description: Analyze test coverage impact of code changes
+
+instructions: SKILL.md
+
+# Arguments
+arguments:
+  required:
+    - name: project-root
+      type: path
+      description: Path to Unreal Engine project root directory
+      validation:
+        - exists: true
+        - type: directory
+
+    - name: files
+      type: array
+      description: List of modified file paths (relative to project root or absolute)
+      validation:
+        - min_items: 1
+
+  optional:
+    - name: include-transitive
+      type: boolean
+      default: true
+      description: Include transitive test modules (default true)
+
+    - name: no-transitive
+      type: boolean
+      default: false
+      description: Exclude transitive test modules (overrides include-transitive)
+
+    - name: output-format
+      type: choice
+      choices: [json, table]
+      default: json
+      description: Output format
+
+    - name: verbose
+      type: boolean
+      default: false
+      description: Enable verbose logging
+
+# Output schema
+output:
+  format: json
+  schema:
+    type: object
+    properties:
+      skill:
+        type: string
+      version:
+        type: string
+      status:
+        type: string
+        enum: [success, partial_success, error]
+      data:
+        type: object
+        properties:
+          summary:
+            type: object
+            properties:
+              modified_files:
+                type: integer
+                description: Total number of modified files analyzed
+              modules_affected:
+                type: integer
+                description: Number of unique modules containing modified files
+              direct_test_files:
+                type: integer
+                description: Number of direct test files in modified modules
+              transitive_test_modules:
+                type: integer
+                description: Number of test modules that depend on modified modules
+              unmapped_files:
+                type: integer
+                description: Number of files that could not be mapped to modules
+          file_to_module:
+            type: object
+            description: Map from file path to parent module name
+            additionalProperties:
+              type: string
+          direct_tests:
+            type: object
+            description: Map from file path to list of direct test file paths
+            additionalProperties:
+              type: array
+              items:
+                type: string
+          transitive_test_modules:
+            type: object
+            description: Map from module name to list of test module names
+            additionalProperties:
+              type: array
+              items:
+                type: string
+          unmapped_files:
+            type: array
+            description: Files that could not be mapped to modules
+            items:
+              type: string
+          recommendations:
+            type: array
+            description: Test execution recommendations
+            items:
+              type: string
+
+# Dependencies
+dependencies:
+  internal:
+    - llt-common
+    - llt-coverage
+  scripts:
+    - scripts/module_walker.py
+  external_skills:
+    - llt-coverage (for dependency graph and Build.cs parsing instructions in SKILL.md)
+
+# Examples
+examples:
+  - name: Basic usage (single file)
+    command: llt_find_for_changes.py --project-root /path/to/ue5 --files Engine/Source/Runtime/Core/Private/Misc/LruCache.cpp
+    description: Find tests for single modified file (includes transitive)
+
+  - name: Multiple files
+    command: llt_find_for_changes.py --project-root /path/to/ue5 --files Core/Private/LruCache.cpp Online/Private/Resonance.cpp
+    description: Find tests for multiple modified files
+
+  - name: Direct tests only
+    command: llt_find_for_changes.py --project-root /path/to/ue5 --files Core/Private/LruCache.cpp --no-transitive
+    description: Find only direct tests (faster, less comprehensive)
+
+  - name: Table output
+    command: llt_find_for_changes.py --project-root /path/to/ue5 --files Core/Private/LruCache.cpp --output-format table
+    description: Display human-readable table
+
+  - name: Verbose logging
+    command: llt_find_for_changes.py --project-root /path/to/ue5 --files Core/Private/LruCache.cpp --verbose
+    description: Enable detailed logging for debugging
+
+# Performance characteristics
+performance:
+  typical_execution_time: 3-5 seconds
+  scalability:
+    modified_files: "O(n log m) where n=files, m=directory depth"
+    dependency_graph: "~2-3s for 450+ .Build.cs files"
+    test_discovery: "O(t) where t=test modules"
+  memory_usage: Medium (< 200 MB for large codebases)
+
+# Error codes
+error_codes:
+  - code: INVALID_PROJECT_ROOT
+    description: Project root path does not exist
+  - code: TEST_DISCOVERY_FAILED
+    description: Internal error during test discovery
+  - code: MODULE_NOT_FOUND
+    description: Could not find parent module for file (warning)
+  - code: TEST_INFRASTRUCTURE_FILE
+    description: File is part of test infrastructure, skipped (warning)
+
+# Limitations
+limitations:
+  - Module-level granularity (identifies test modules, not individual test cases)
+  - Static analysis only (does not consider runtime behavior)
+  - Requires .Build.cs (files without parent .Build.cs cannot be mapped)
+  - UE module system only (works within Unreal Engine structure)
+  - Test infrastructure modules are excluded (Catch2, OnlineTestsCore, LowLevelTestsRunner)
+
+# Use cases
+use_cases:
+  - Pre-commit testing (run only affected tests)
+  - Pull request validation (identify minimum test set)
+  - CI/CD optimization (reduce test execution time)
+  - Impact analysis (understand test coverage for changes)
+  - Test selection for incremental builds

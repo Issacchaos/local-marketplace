@@ -1,0 +1,33 @@
+name: test-planner
+version: 1.0.0
+description: Generates a structured test plan from design documentation. Produces risk-driven scope, edge cases, test approach splits, cadence, and entry/exit criteria.
+category: testing
+
+tags:
+  - testing
+  - test-planning
+  - qa
+  - risk-analysis
+
+author: James Edwards
+created: 2026-02-26
+last_updated: 2026-02-26
+
+arguments:
+  required:
+    - name: path
+      type: path
+      description: Path to design document or folder of documents
+  optional:
+    - name: code-path
+      type: path
+      description: Path to existing source code for refactor/enhancement risk analysis
+
+capabilities:
+  - parse_design_documents
+  - risk_identification
+  - scope_definition
+  - test_approach_allocation
+  - test_plan_generation
+
+instructions: SKILL.md

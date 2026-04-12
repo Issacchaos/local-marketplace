@@ -1,0 +1,21 @@
+PLACEHOLDER: icon.png needed
+
+Requirements:
+- Size: 128x128 pixels
+- Format: PNG with transparency
+- Design: Testing/automation theme
+- Colors: Project branding
+
+To create:
+1. See assets/README.md for detailed instructions
+2. Create or download a testing icon
+3. Save as: assets/icon.png
+4. Remove this placeholder file
+
+Suggested design:
+- Test tube or beaker
+- Checkmark symbol
+- Gear/automation icon
+- Python-themed colors (blue/yellow)
+
+Until then, plugin.json references: "assets/icon.png" (will need actual file)

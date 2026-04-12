@@ -1,0 +1,141 @@
+name: llt-coverage
+version: 1.0.0
+description: Calculate module-level test coverage for Unreal Engine LowLevelTests
+
+# Skill metadata
+metadata:
+  category: testing
+  tags:
+    - lowleveltests
+    - coverage
+    - testing
+    - unreal-engine
+    - analysis
+  author: LLT Skills Suite
+  created: 2026-02-18
+
+# Skill capabilities
+capabilities:
+  - name: calculate_coverage
+    description: Calculate module-level test coverage based on dependency graph analysis
+  - name: identify_untested_modules
+    description: Identify runtime modules with no test coverage
+  - name: coverage_reporting
+    description: Generate coverage reports in multiple formats (JSON, table, summary)
+
+# Instructions (instruction-based skill)
+instructions: SKILL.md
+
+# Arguments
+arguments:
+  required:
+    - name: project-root
+      type: path
+      description: Path to Unreal Engine project root directory
+      validation:
+        - exists: true
+        - type: directory
+
+  optional:
+    - name: output-format
+      type: choice
+      choices: [json, table, summary]
+      default: json
+      description: Output format
+
+    - name: module
+      type: string
+      description: Filter to specific module name
+
+# Output schema
+output:
+  format: json
+  schema:
+    type: object
+    properties:
+      skill:
+        type: string
+      version:
+        type: string
+      status:
+        type: string
+        enum: [success, partial_success, error]
+      data:
+        type: object
+        properties:
+          build_cs_files_found:
+            type: integer
+          modules_parsed:
+            type: integer
+          coverage:
+            type: array
+            items:
+              type: object
+              properties:
+                module_name:
+                  type: string
+                covered:
+                  type: boolean
+                test_modules:
+                  type: array
+                  items:
+                    type: string
+          statistics:
+            type: object
+            properties:
+              total_modules:
+                type: integer
+              covered_modules:
+                type: integer
+              uncovered_modules:
+                type: integer
+              coverage_percentage:
+                type: number
+              uncovered_module_names:
+                type: array
+                items:
+                  type: string
+
+# Dependencies
+dependencies:
+  internal:
+    - llt-common
+  documentation:
+    - SKILL.md (includes Build.cs Parsing Instructions)
+
+# Usage examples (agent-generated code approach)
+usage_examples:
+  - description: Calculate coverage with default JSON output
+    approach: Generate Python script following SKILL.md orchestration flow with --project-root argument
+
+  - description: Display human-readable table with all modules
+    approach: Generate script with --output-format table
+
+  - description: Show high-level coverage statistics
+    approach: Generate script with --output-format summary
+
+  - description: Filter to specific module
+    approach: Generate script with --module Core filter
+
+# Performance characteristics
+performance:
+  typical_execution_time: 2-3 seconds
+  scalability:
+    build_cs_files: 450 files in ~2s
+  memory_usage: Low (< 100 MB)
+
+# Error codes
+error_codes:
+  - code: INVALID_PROJECT_ROOT
+    description: Project root path does not exist
+  - code: COVERAGE_CALCULATION_FAILED
+    description: Failed to calculate coverage
+  - code: MODULE_NOT_FOUND
+    description: Specified module not found in dependency graph
+
+# Limitations
+limitations:
+  - Module-level coverage only (not class/function-level)
+  - Based on static dependency analysis, not runtime execution
+  - Does not measure line/branch coverage
+  - Cannot detect reflection-based or dynamic tests

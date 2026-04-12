@@ -1,0 +1,5 @@
+{
+  "enabledPlugins": {
+    "epic-sdd@epic-internal-claude-code-plugins": true
+  }
+}

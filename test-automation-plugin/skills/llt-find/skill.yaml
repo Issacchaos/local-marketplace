@@ -1,0 +1,17 @@
+name: llt-find
+version: 1.0.0
+description: "Discover LowLevelTest targets in Unreal Engine projects using BuildGraph-first strategy"
+instructions: SKILL.md
+user_invocable: true
+python_version: ">=3.9"
+dependencies: []
+platforms:
+  - win64
+  - mac
+  - linux
+tags:
+  - testing
+  - unreal-engine
+  - catch2
+  - discovery
+  - lowleveltests

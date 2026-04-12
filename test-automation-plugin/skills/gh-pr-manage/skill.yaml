@@ -1,0 +1,12 @@
+name: gh-pr-manage
+version: 1.0.0
+description: Query, reply to, and resolve GitHub PR review threads using GitHub CLI with GraphQL queries
+
+instructions: SKILL.md
+
+category: collaboration
+tags:
+  - github
+  - pull-request
+  - review
+  - comments

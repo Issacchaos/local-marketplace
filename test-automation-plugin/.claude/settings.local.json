@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat(test-generation): Enforce standard test locations per language conventions\n\nThis commit implements comprehensive test location enforcement to ensure\ngenerated tests are placed in the correct, runnable location according to\nproject structure and language conventions, preventing tests from being\nplaced in temporary directories like .claude-tests/.\n\n## Changes\n\n### Write Agent (agents/write-agent.md)\n- Add mandatory test location detection in Step 3 with detailed strategy\n- Add critical validation in Step 6 to reject .claude-tests/ and .claude/\n- Reference new Test Location Detection skill as CRITICAL - READ FIRST\n- Include path resolution examples for different project structures\n\n### Framework Detection Skill (skills/framework-detection/SKILL.md)\n- Update Write Agent workflow to reference Test Location Detection\n- Add validation step to prevent temporary directory usage\n\n### New: Test Location Detection Skill (skills/test-location-detection/)\n- Create comprehensive cross-language test location detection algorithm\n- Support for 10 languages (Python, JS/TS, Java, C#, Go, C++, Rust, Ruby, C)\n- Configuration reading (pytest.ini, package.json, pom.xml, etc.)\n- Validation rules with explicit forbidden locations\n- Path resolution algorithm with detailed examples\n- Error handling for edge cases\n\n### New: Python Test Locations (skills/test-location-detection/python-test-locations.md)\n- Detailed pytest.ini, pyproject.toml, setup.cfg configuration parsing\n- 4 common project structures (src/ layout, flat, alongside source, Django)\n- Complete path resolution algorithm with step-by-step examples\n- Edge cases (no src/, multiple source dirs, __init__.py, private modules)\n- File naming patterns and validation rules\n- Integration pseudocode for Write Agent\n\n## Benefits\n\n- Tests are discoverable by test runners\n- Tests are versioned (part of the project, committed to git)\n- Tests follow language and project conventions\n- Tests are runnable with standard commands (pytest, npm test, etc.)\n- Tests are maintainable with clear organization\n\n## Validation\n\nTests MUST be in standard locations:\n✅ tests/, spec/, src/test/java/, alongside source (Go, Rust)\n🚫 .claude-tests/, .claude/, /tmp/, outside project boundaries\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr comment:*)",
+      "Bash(git commit:*)",
+      "Bash(gh pr reviews:*)",
+      "Bash(gh api:*)",
+      "Bash(cat:*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(gh pr create:*)",
+      "SlashCommand(/epic-sdd:task-breakdown phase4-systems-languages)",
+      "SlashCommand(/epic-sdd:task-breakdown:*)",
+      "Bash(Fail)",
+      "Bash(ls:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
