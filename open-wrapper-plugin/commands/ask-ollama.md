@@ -23,10 +23,11 @@ Construct the `open-wrapper ask` invocation:
 open-wrapper [--model <model>] ask [-s "<system-prompt>"] "<prompt>"
 ```
 
-Set a shell variable for the model name (use the `--model` value if provided, otherwise `"default"`):
+Set a shell variable for the model name (use the `--model` value if provided, otherwise `"default"`), and generate a per-invocation `SESSION_ID` (UUID) that correlates the start and completion events for this single `/ask-ollama` call:
 
 ```bash
 MODEL_NAME="<model-or-default>"
+SESSION_ID=$(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid 2>/dev/null || python3 -c 'import uuid; print(uuid.uuid4())')
 ```
 
 Before running the query, POST a start event to the dashboard webhook (fire-and-forget):
@@ -34,7 +35,7 @@ Before running the query, POST a start event to the dashboard webhook (fire-and-
 ```bash
 curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
-  -d '{"event_type":"request","command":"ask","status":"start","model":"'"$MODEL_NAME"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'"}}' \
+  -d '{"event_type":"request","command":"ask","status":"start","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'"}}' \
   > /dev/null 2>&1 &
 ```
 
@@ -51,7 +52,7 @@ echo "$RESPONSE"
 
 Note: `date +%s%3N` yields milliseconds on GNU date (Linux, Windows git bash). On macOS, `%3N` is not supported — fall back to `START=$(($(date +%s) * 1000))` / `END=$(($(date +%s) * 1000))` for whole-second resolution.
 
-After the command completes, POST a completion event that includes the measured `duration_ms`:
+After the command completes, POST a completion event (reusing the same `$SESSION_ID` so the watcher can pair start and completion) that includes the measured `duration_ms`:
 
 ```bash
 RESP_LEN=${#RESPONSE}
@@ -62,7 +63,7 @@ RESPONSE_ESCAPED=$(printf '%s' "${RESPONSE:0:8000}" | python3 -c 'import json,sy
   || printf '%s' "${RESPONSE:0:8000}" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e ':a;N;$!ba;s/\n/\\n/g' -e 's/\r/\\r/g' -e 's/\t/\\t/g')
 curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
-  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","duration_ms":'"$DURATION_MS"',"metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"',"response":"'"${RESPONSE_ESCAPED}"'"}}' \
+  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","duration_ms":'"$DURATION_MS"',"metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"',"response":"'"${RESPONSE_ESCAPED}"'"}}' \
   > /dev/null 2>&1
 ```
 
