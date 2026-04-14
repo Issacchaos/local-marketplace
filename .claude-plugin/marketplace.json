@@ -26,7 +26,7 @@
       "name": "open-wrapper",
       "description": "Claude Code integration for open-wrapper — query Ollama models, check status, and emit events to the LLM watcher dashboard",
       "category": "development",
-      "source": "D:\\dev\\open-wrapper\\plugin"
+      "source": "./open-wrapper-plugin"
     }
   ]
 }
