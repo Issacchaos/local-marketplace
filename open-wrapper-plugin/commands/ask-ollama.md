@@ -56,11 +56,17 @@ After the command completes, POST a completion event that includes the measured 
 ```bash
 RESP_LEN=${#RESPONSE}
 DURATION_MS=$((END-START))
+# Truncate the response body to 8000 chars and JSON-escape it (handles backslashes, quotes,
+# newlines, tabs, carriage returns, and control chars) so it can be embedded safely in the webhook payload.
+RESPONSE_ESCAPED=$(printf '%s' "${RESPONSE:0:8000}" | python3 -c 'import json,sys; sys.stdout.write(json.dumps(sys.stdin.read())[1:-1])' 2>/dev/null \
+  || printf '%s' "${RESPONSE:0:8000}" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e ':a;N;$!ba;s/\n/\\n/g' -e 's/\r/\\r/g' -e 's/\t/\\t/g')
 curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
-  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","duration_ms":'"$DURATION_MS"',"metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"'}}' \
+  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","duration_ms":'"$DURATION_MS"',"metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"',"response":"'"${RESPONSE_ESCAPED}"'"}}' \
   > /dev/null 2>&1
 ```
+
+The `response` field gives the watcher dashboard detail panel the model output (truncated to 8000 chars); `response_length` remains so the dashboard can still show the true total size when the body is truncated.
 
 Combine all of the above into a single Bash tool call so the start event, the query, and the completion event run together in one script.
 
