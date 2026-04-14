@@ -33,7 +33,7 @@ The `id`, `timestamp`, and `source` fields are required in the JSON payload (the
 ## Emitting a Single Event
 
 ```bash
-curl -s -X POST http://localhost:3000/api/open-wrapper \
+curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "id": "'$(uuidgen || cat /proc/sys/kernel/random/uuid 2>/dev/null || python3 -c "import uuid; print(uuid.uuid4())")'",
@@ -54,7 +54,7 @@ The server responds with `{"ok": true}` on success.
 Wrap multiple events in a batch payload:
 
 ```bash
-curl -s -X POST http://localhost:3000/api/open-wrapper \
+curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "batch": true,
@@ -90,7 +90,7 @@ curl -s -X POST http://localhost:3000/api/open-wrapper \
 Emit when an LLM request begins.
 
 ```bash
-curl -s -X POST http://localhost:3000/api/open-wrapper \
+curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "id": "'$(python3 -c "import uuid; print(uuid.uuid4())")'",
@@ -109,7 +109,7 @@ curl -s -X POST http://localhost:3000/api/open-wrapper \
 Emit when the LLM response has been fully received.
 
 ```bash
-curl -s -X POST http://localhost:3000/api/open-wrapper \
+curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "id": "'$(python3 -c "import uuid; print(uuid.uuid4())")'",
@@ -128,7 +128,7 @@ curl -s -X POST http://localhost:3000/api/open-wrapper \
 Emit when a request fails.
 
 ```bash
-curl -s -X POST http://localhost:3000/api/open-wrapper \
+curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "id": "'$(python3 -c "import uuid; print(uuid.uuid4())")'",
@@ -147,7 +147,7 @@ curl -s -X POST http://localhost:3000/api/open-wrapper \
 Emit informational or diagnostic messages.
 
 ```bash
-curl -s -X POST http://localhost:3000/api/open-wrapper \
+curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
   -d '{
     "id": "'$(python3 -c "import uuid; print(uuid.uuid4())")'",
@@ -174,11 +174,11 @@ Check that events are arriving via the LLM Watcher endpoints:
 
 ```bash
 # Get full event history
-curl -s http://localhost:3000/api/history | python3 -m json.tool
+curl -s ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/history | python3 -m json.tool
 
 # Get aggregated stats
-curl -s http://localhost:3000/api/stats | python3 -m json.tool
+curl -s ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/stats | python3 -m json.tool
 
 # Stream live events via SSE
-curl -s -N http://localhost:3000/api/events
+curl -s -N ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/events
 ```
