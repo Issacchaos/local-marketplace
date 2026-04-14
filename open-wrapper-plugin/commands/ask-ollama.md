@@ -28,6 +28,21 @@ Set a shell variable for the model name (use the `--model` value if provided, ot
 ```bash
 MODEL_NAME="<model-or-default>"
 SESSION_ID=$(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid 2>/dev/null || python3 -c 'import uuid; print(uuid.uuid4())')
+# BIG-3: Cross-source correlation. Capture the Claude agent/session id that
+# spawned this `/ask-ollama` call so the watcher can link the open-wrapper
+# row back to the Claude row. Claude Code exposes `$CLAUDE_SESSION_ID` in
+# the Bash tool's env when available; when unset (e.g. running the command
+# outside a Claude session) we leave the forwarded field empty and the
+# watcher simply renders the open-wrapper row without a parent link.
+PARENT_SESSION_ID="${CLAUDE_SESSION_ID:-}"
+# Build the parent-id JSON fragment ("" expands to nothing so the field is
+# omitted rather than posted as an empty string — matches the Rust
+# normalizer's `omits when empty` guard).
+if [ -n "$PARENT_SESSION_ID" ]; then
+  PARENT_JSON=',"parent_session_id":"'"$PARENT_SESSION_ID"'"'
+else
+  PARENT_JSON=""
+fi
 ```
 
 Before running the query, POST a start event to the dashboard webhook (fire-and-forget):
@@ -35,7 +50,7 @@ Before running the query, POST a start event to the dashboard webhook (fire-and-
 ```bash
 curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
-  -d '{"event_type":"request","command":"ask","status":"start","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'"}}' \
+  -d '{"event_type":"request","command":"ask","status":"start","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'"'"$PARENT_JSON"',"metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'"}}' \
   > /dev/null 2>&1 &
 ```
 
@@ -69,7 +84,7 @@ open-wrapper [--model <model>] ask [-s "<system>"] "<prompt>" 2>&1 \
       if [ "$ELAPSED_SINCE_FLUSH" -ge "$FLUSH_EVERY_MS" ] || [ "$TOKENS_SINCE_FLUSH" -ge "$FLUSH_EVERY_TOKENS" ]; then
         curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
           -H "Content-Type: application/json" \
-          -d '{"event_type":"streaming","command":"ask","status":"streaming","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","tokens_so_far":'"$TOKEN_COUNT"',"metadata":{"tokens_so_far":'"$TOKEN_COUNT"'}}' \
+          -d '{"event_type":"streaming","command":"ask","status":"streaming","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'"'"$PARENT_JSON"',"tokens_so_far":'"$TOKEN_COUNT"',"metadata":{"tokens_so_far":'"$TOKEN_COUNT"'}}' \
           > /dev/null 2>&1 &
         LAST_FLUSH_MS=$NOW
         LAST_FLUSH_TOKENS=$TOKEN_COUNT
@@ -99,7 +114,7 @@ RESPONSE_ESCAPED=$(printf '%s' "${RESPONSE:0:8000}" | python3 -c 'import json,sy
   || printf '%s' "${RESPONSE:0:8000}" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e ':a;N;$!ba;s/\n/\\n/g' -e 's/\r/\\r/g' -e 's/\t/\\t/g')
 curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
-  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","duration_ms":'"$DURATION_MS"',"metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"',"response":"'"${RESPONSE_ESCAPED}"'"}}' \
+  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'"'"$PARENT_JSON"',"duration_ms":'"$DURATION_MS"',"metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"',"response":"'"${RESPONSE_ESCAPED}"'"}}' \
   > /dev/null 2>&1
 ```
 
