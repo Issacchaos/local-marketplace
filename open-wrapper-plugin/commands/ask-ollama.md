@@ -40,20 +40,25 @@ curl -s -X POST http://localhost:9713/webhook \
 
 Truncate the prompt to 200 characters max for the webhook metadata.
 
-Then run the actual command and capture its output:
+Then run the actual command and capture its output, bracketing the call with millisecond timestamps so we can report latency:
 
 ```bash
+START=$(date +%s%3N)
 RESPONSE=$(open-wrapper [--model <model>] ask [-s "<system>"] "<prompt>" 2>&1)
+END=$(date +%s%3N)
 echo "$RESPONSE"
 ```
 
-After the command completes, POST a completion event:
+Note: `date +%s%3N` yields milliseconds on GNU date (Linux, Windows git bash). On macOS, `%3N` is not supported — fall back to `START=$(($(date +%s) * 1000))` / `END=$(($(date +%s) * 1000))` for whole-second resolution.
+
+After the command completes, POST a completion event that includes the measured `duration_ms`:
 
 ```bash
 RESP_LEN=${#RESPONSE}
+DURATION_MS=$((END-START))
 curl -s -X POST http://localhost:9713/webhook \
   -H "Content-Type: application/json" \
-  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"'}}' \
+  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","duration_ms":'"$DURATION_MS"',"metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"'}}' \
   > /dev/null 2>&1
 ```
 
