@@ -107,6 +107,33 @@ The `response` field gives the watcher dashboard detail panel the model output (
 
 Combine all of the above into a single Bash tool call so the start event, the query, and the completion event run together in one script.
 
-## Step 3: Display the Response
+## Step 3: Lint the Draft (auto)
 
-Show the model's response to the user. If `open-wrapper` returned an error (non-zero exit code or stderr indicating a connection failure), tell the user that the Ollama model could not be reached and suggest checking that Ollama is running (`ollama serve`).
+Before showing the response, pipe it through `open-wrapper lint` to flag any
+known Ollama pitfalls (flat `bevy_ecs::X` imports, hallucinated `serde_ron`,
+mixed workspace/version Cargo deps, markdown code fences, `is_normal()` float
+guards, and `assert_eq!` literals that disagree with their trailing comment).
+The lint is advisory — findings are surfaced to the user but do not block the
+response.
+
+```bash
+LINT_JSON=$(printf '%s' "$RESPONSE" | open-wrapper lint --ruleset rust-bevy 2>/dev/null)
+LINT_EXIT=$?
+```
+
+If `LINT_EXIT` is non-zero and `LINT_JSON` is a non-empty JSON array, prepend a
+`⚠ Lint findings` block to the output in Step 4 that lists each finding's
+`rule_id`, `line`, and `description`. Otherwise, skip the block.
+
+## Step 4: Display the Response
+
+If Step 3 produced lint findings, prepend a short block in the form:
+
+```
+⚠ Lint findings (from `open-wrapper lint --ruleset rust-bevy`):
+- [hallucinated-serde-ron] line 3: `serde_ron` does not exist on crates.io. Use the `ron` crate.
+```
+
+followed by the raw response body.
+
+If `open-wrapper` returned an error (non-zero exit code or stderr indicating a connection failure), tell the user that the Ollama model could not be reached and suggest checking that Ollama is running (`ollama serve`).
