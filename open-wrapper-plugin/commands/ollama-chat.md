@@ -12,11 +12,17 @@ Parse the arguments for optional flags:
 If no system prompt is given, default to: "You are a helpful assistant."
 If no model is given, omit the `--model` flag (open-wrapper uses its configured default).
 
-**Step 1 — Start session.** POST a session start event via Bash:
+**Step 1 — Start session.** Generate a `SESSION_ID` (UUID) that will be reused by every webhook POST in this chat session so the watcher can group all turns under one logical session:
+
+```
+SESSION_ID=$(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid 2>/dev/null || python3 -c 'import uuid; print(uuid.uuid4())')
+```
+
+Then POST a session start event via Bash:
 
 ```
 curl -s -X POST http://localhost:9713/webhook -H "Content-Type: application/json" \
-  -d '{"event_type":"system","command":"chat","status":"start","model":"<model or default>","metadata":{"action":"chat_session_start"}}'
+  -d '{"event_type":"system","command":"chat","status":"start","model":"<model or default>","session_id":"'"$SESSION_ID"'","metadata":{"action":"chat_session_start"}}'
 ```
 
 If the webhook POST fails, note it but continue — it is not blocking.
@@ -40,10 +46,10 @@ If the webhook POST fails, note it but continue — it is not blocking.
    ```
    Capture the output as the assistant reply.
 
-4. POST a completion event (non-blocking, ignore failures):
+4. POST a completion event (non-blocking, ignore failures). Reuse the same `$SESSION_ID` generated in Step 1 so every turn in this session shares one id:
    ```
    curl -s -X POST http://localhost:9713/webhook -H "Content-Type: application/json" \
-     -d '{"event_type":"request","command":"chat","status":"complete","metadata":{"action":"chat_turn_complete","turn":<turn_number>}}'
+     -d '{"event_type":"request","command":"chat","status":"complete","session_id":"'"$SESSION_ID"'","metadata":{"action":"chat_turn_complete","turn":<turn_number>}}'
    ```
 
 5. Display the assistant reply to the user.
@@ -56,11 +62,11 @@ If the webhook POST fails, note it but continue — it is not blocking.
 
 7. Go back to sub-step 1.
 
-**Step 3 — End session.** POST a session end event via Bash:
+**Step 3 — End session.** POST a session end event via Bash, carrying the same `$SESSION_ID` so the end event pairs with the start and every turn in between:
 
 ```
 curl -s -X POST http://localhost:9713/webhook -H "Content-Type: application/json" \
-  -d '{"event_type":"system","command":"chat","status":"end","metadata":{"action":"chat_session_end"}}'
+  -d '{"event_type":"system","command":"chat","status":"end","session_id":"'"$SESSION_ID"'","metadata":{"action":"chat_session_end"}}'
 ```
 
 Print a brief message confirming the chat session has ended and how many turns were completed.

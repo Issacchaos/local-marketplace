@@ -23,10 +23,11 @@ Construct the `open-wrapper ask` invocation:
 open-wrapper [--model <model>] ask [-s "<system-prompt>"] "<prompt>"
 ```
 
-Set a shell variable for the model name (use the `--model` value if provided, otherwise `"default"`):
+Set a shell variable for the model name (use the `--model` value if provided, otherwise `"default"`), and generate a per-invocation `SESSION_ID` (UUID) that correlates the start and completion events for this single `/ask-ollama` call:
 
 ```bash
 MODEL_NAME="<model-or-default>"
+SESSION_ID=$(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid 2>/dev/null || python3 -c 'import uuid; print(uuid.uuid4())')
 ```
 
 Before running the query, POST a start event to the dashboard webhook (fire-and-forget):
@@ -34,7 +35,7 @@ Before running the query, POST a start event to the dashboard webhook (fire-and-
 ```bash
 curl -s -X POST http://localhost:9713/webhook \
   -H "Content-Type: application/json" \
-  -d '{"event_type":"request","command":"ask","status":"start","model":"'"$MODEL_NAME"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'"}}' \
+  -d '{"event_type":"request","command":"ask","status":"start","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'"}}' \
   > /dev/null 2>&1 &
 ```
 
@@ -47,13 +48,13 @@ RESPONSE=$(open-wrapper [--model <model>] ask [-s "<system>"] "<prompt>" 2>&1)
 echo "$RESPONSE"
 ```
 
-After the command completes, POST a completion event:
+After the command completes, POST a completion event (reusing the same `$SESSION_ID` so the watcher can pair start and completion):
 
 ```bash
 RESP_LEN=${#RESPONSE}
 curl -s -X POST http://localhost:9713/webhook \
   -H "Content-Type: application/json" \
-  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"'}}' \
+  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"'}}' \
   > /dev/null 2>&1
 ```
 
