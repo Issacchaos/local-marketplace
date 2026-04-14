@@ -30,16 +30,31 @@ MODEL_NAME="<model-or-default>"
 SESSION_ID=$(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid 2>/dev/null || python3 -c 'import uuid; print(uuid.uuid4())')
 ```
 
-Before running the query, POST a start event to the dashboard webhook (fire-and-forget):
+Before running the query, JSON-escape the full prompt once (truncated to 16 KB)
+and derive the 200-char summary from it. Both fields ride every webhook event
+so the watcher can render a preview *and* offer BIG-4 one-click escalation
+back to Claude from the `llm_response` detail panel:
+
+```bash
+# PROMPT here is the raw user-supplied prompt. Do this JSON-escape once.
+PROMPT_FULL_ESCAPED=$(printf '%s' "${PROMPT:0:16384}" | python3 -c 'import json,sys; sys.stdout.write(json.dumps(sys.stdin.read())[1:-1])' 2>/dev/null \
+  || printf '%s' "${PROMPT:0:16384}" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e ':a;N;$!ba;s/\n/\\n/g' -e 's/\r/\\r/g' -e 's/\t/\\t/g')
+PROMPT_TRUNCATED=$(printf '%s' "${PROMPT:0:200}" | python3 -c 'import json,sys; sys.stdout.write(json.dumps(sys.stdin.read())[1:-1])' 2>/dev/null \
+  || printf '%s' "${PROMPT:0:200}" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e ':a;N;$!ba;s/\n/\\n/g' -e 's/\r/\\r/g' -e 's/\t/\\t/g')
+```
+
+Then POST a start event to the dashboard webhook (fire-and-forget). The
+`prompt` key stays as the 200-char summary for back-compat with the event
+table; the new `prompt_full` key carries the first 16 KB of the original
+prompt so the watcher's "Escalate to Claude" button (BIG-4) can re-author it
+in one click:
 
 ```bash
 curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
-  -d '{"event_type":"request","command":"ask","status":"start","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'"}}' \
+  -d '{"event_type":"request","command":"ask","status":"start","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","prompt_full":"'"${PROMPT_FULL_ESCAPED}"'"}}' \
   > /dev/null 2>&1 &
 ```
-
-Truncate the prompt to 200 characters max for the webhook metadata.
 
 Then run the actual command as a **streamed pipeline** rather than a buffered capture. The output is written to a buffer file line-by-line, and every ~500 ms (or every 16 tokens — whichever comes first) we POST a `streaming` webhook event so the watcher renders a live tokens/s figure on the in-flight agent row. Bracket the whole pipeline with millisecond timestamps so we can still report latency:
 
@@ -99,11 +114,11 @@ RESPONSE_ESCAPED=$(printf '%s' "${RESPONSE:0:8000}" | python3 -c 'import json,sy
   || printf '%s' "${RESPONSE:0:8000}" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e ':a;N;$!ba;s/\n/\\n/g' -e 's/\r/\\r/g' -e 's/\t/\\t/g')
 curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
   -H "Content-Type: application/json" \
-  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","duration_ms":'"$DURATION_MS"',"metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","response_length":'"$RESP_LEN"',"response":"'"${RESPONSE_ESCAPED}"'"}}' \
+  -d '{"event_type":"completion","command":"ask","status":"completed","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","duration_ms":'"$DURATION_MS"',"metadata":{"prompt":"'"${PROMPT_TRUNCATED}"'","prompt_full":"'"${PROMPT_FULL_ESCAPED}"'","response_length":'"$RESP_LEN"',"response":"'"${RESPONSE_ESCAPED}"'"}}' \
   > /dev/null 2>&1
 ```
 
-The `response` field gives the watcher dashboard detail panel the model output (truncated to 8000 chars); `response_length` remains so the dashboard can still show the true total size when the body is truncated.
+The `response` field gives the watcher dashboard detail panel the model output (truncated to 8000 chars); `response_length` remains so the dashboard can still show the true total size when the body is truncated. The `prompt_full` field (up to 16 KB) lets the watcher's "Escalate to Claude" button replay the originating prompt into Claude's prompt bar without re-typing — BIG-4 in `docs/research-improvements/SUMMARY.md`.
 
 Combine all of the above into a single Bash tool call so the start event, the query, and the completion event run together in one script.
 
