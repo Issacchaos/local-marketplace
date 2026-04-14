@@ -41,16 +41,51 @@ curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper 
 
 Truncate the prompt to 200 characters max for the webhook metadata.
 
-Then run the actual command and capture its output, bracketing the call with millisecond timestamps so we can report latency:
+Then run the actual command as a **streamed pipeline** rather than a buffered capture. The output is written to a buffer file line-by-line, and every ~500 ms (or every 16 tokens — whichever comes first) we POST a `streaming` webhook event so the watcher renders a live tokens/s figure on the in-flight agent row. Bracket the whole pipeline with millisecond timestamps so we can still report latency:
 
 ```bash
 START=$(date +%s%3N)
-RESPONSE=$(open-wrapper [--model <model>] ask [-s "<system>"] "<prompt>" 2>&1)
+BUFFER=$(mktemp 2>/dev/null || echo "/tmp/ow-ask-$$.out")
+: > "$BUFFER"
+TOKEN_COUNT=0
+LAST_FLUSH_MS=$START
+FLUSH_EVERY_MS=500
+FLUSH_EVERY_TOKENS=16
+
+# Stream stdout line-by-line. Each line is written to the buffer and its
+# whitespace-delimited tokens are counted. We flush a streaming webhook event
+# (cumulative tokens_so_far) every FLUSH_EVERY_MS milliseconds or every
+# FLUSH_EVERY_TOKENS tokens — whichever trips first — so the watcher sees
+# monotonically-increasing counts without one curl per token.
+open-wrapper [--model <model>] ask [-s "<system>"] "<prompt>" 2>&1 \
+  | while IFS= read -r line; do
+      printf '%s\n' "$line" >> "$BUFFER"
+      # shellcheck disable=SC2086
+      set -- $line
+      TOKEN_COUNT=$((TOKEN_COUNT + $#))
+      NOW=$(date +%s%3N)
+      ELAPSED_SINCE_FLUSH=$((NOW - LAST_FLUSH_MS))
+      TOKENS_SINCE_FLUSH=$((TOKEN_COUNT - LAST_FLUSH_TOKENS))
+      if [ "$ELAPSED_SINCE_FLUSH" -ge "$FLUSH_EVERY_MS" ] || [ "$TOKENS_SINCE_FLUSH" -ge "$FLUSH_EVERY_TOKENS" ]; then
+        curl -s -X POST ${OPEN_WRAPPER_WEBHOOK:-http://localhost:1420}/api/open-wrapper \
+          -H "Content-Type: application/json" \
+          -d '{"event_type":"streaming","command":"ask","status":"streaming","model":"'"$MODEL_NAME"'","session_id":"'"$SESSION_ID"'","tokens_so_far":'"$TOKEN_COUNT"',"metadata":{"tokens_so_far":'"$TOKEN_COUNT"'}}' \
+          > /dev/null 2>&1 &
+        LAST_FLUSH_MS=$NOW
+        LAST_FLUSH_TOKENS=$TOKEN_COUNT
+      fi
+    done
 END=$(date +%s%3N)
+RESPONSE=$(cat "$BUFFER")
+rm -f "$BUFFER"
 echo "$RESPONSE"
 ```
 
-Note: `date +%s%3N` yields milliseconds on GNU date (Linux, Windows git bash). On macOS, `%3N` is not supported — fall back to `START=$(($(date +%s) * 1000))` / `END=$(($(date +%s) * 1000))` for whole-second resolution.
+Initialize `LAST_FLUSH_TOKENS=0` alongside `TOKEN_COUNT=0` (line above the loop). The `while` loop runs in a subshell on some older Bash versions — if you see `TOKEN_COUNT` always 0 after the loop, use `lastpipe` (`shopt -s lastpipe` on Bash 4.2+) or switch to process-substitution (`done < <(open-wrapper …)`).
+
+Note: `date +%s%3N` yields milliseconds on GNU date (Linux, Windows git bash). On macOS, `%3N` is not supported — fall back to `START=$(($(date +%s) * 1000))` / `END=$(($(date +%s) * 1000))` for whole-second resolution. On macOS you will also want `gdate` for the in-loop `NOW=...` call.
+
+"Tokens" here are whitespace-delimited words from stdout — an approximation of true BPE tokens, but sufficient for the watcher's tokens/s feel. If `open-wrapper` gains a `--stream-tokens` flag that emits one true token per line, swap `$#` for `1` in the counter.
 
 After the command completes, POST a completion event (reusing the same `$SESSION_ID` so the watcher can pair start and completion) that includes the measured `duration_ms`:
 
