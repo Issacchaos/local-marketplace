@@ -1,0 +1,12 @@
+#!/bin/sh
+# Block commits that include unresolved git conflict markers.
+# Detects added lines starting with <<<<<<<, =======, or >>>>>>> in the staged diff.
+markers=$(git diff --cached -U0 -- ':(exclude).git/hooks/*' \
+  | grep -E '^\+(<{7}|={7}|>{7})( |$)' || true)
+if [ -n "$markers" ]; then
+  echo "ERROR: conflict markers found in staged changes:" >&2
+  echo "$markers" >&2
+  echo "" >&2
+  echo "Resolve conflicts (delete <<<<<<< / ======= / >>>>>>> lines) before committing." >&2
+  exit 1
+fi
