@@ -441,16 +441,27 @@ if (outstanding_questions.length > 0) {
 
 ### Step 4: Request User Approval (If Enabled)
 
-**Present execution plan and get approval**:
+**Present execution plan and get approval via the `AskUserQuestion` tool.**
+
+Do NOT write the approval prompt as plain text (e.g. `Approve / Modify / Reject?`) — that puts the burden on the user's UI to scrape options out of prose, which is fragile. Always invoke `AskUserQuestion` so the question and options travel as a structured `tool_use` block. Dashboards (e.g. llm-watcher) then show proper clickable buttons with label + description.
 
 ```javascript
 if (final_config.approval_gates.before_execution && !final_config.approval_gates.disabled) {
   display_execution_plan(execution_plan);
 
-  const approval = await request_approval({
-    prompt: "Approve this execution plan?",
-    options: ["Approve", "Modify", "Reject"]
+  const { answers } = AskUserQuestion({
+    questions: [{
+      header: "Approval",
+      question: "Approve this execution plan?",
+      multiSelect: false,
+      options: [
+        { label: "Approve", description: "Spawn teammates and run the plan as shown" },
+        { label: "Modify",  description: "Revise the plan first (up to 3 iterations)" },
+        { label: "Reject",  description: "Abort without spawning any teammates" },
+      ],
+    }],
   });
+  const approval = answers["Approve this execution plan?"];
 
   if (approval === "Reject") {
     return abort_execution("User rejected plan at approval gate");
